@@ -1,0 +1,70 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void printSpiral(int **matrix, int R, int C) {
+    int top = 0, bottom = R - 1;
+    int left = 0, right = C - 1;
+
+    while (top <= bottom && left <= right) {
+        // 1) izquierda -> derecha
+        for (int j = left; j <= right; j++)
+            printf("%d ", matrix[top][j]);
+        top++;
+
+        // 2) arriba -> abajo
+        for (int i = top; i <= bottom; i++)
+            printf("%d ", matrix[i][right]);
+        right--;
+
+        // 3) derecha -> izquierda
+        if (top <= bottom) {
+            for (int j = right; j >= left; j--)
+                printf("%d ", matrix[bottom][j]);
+            bottom--;
+        }
+
+        // 4) abajo -> arriba
+        if (left <= right) {
+            for (int i = bottom; i >= top; i--)
+                printf("%d ", matrix[i][left]);
+            left++;
+        }
+    }
+    printf("\n");
+}
+
+int main() {
+    int R, C;
+    printf("Enter rows and columns: ");
+    scanf("%d %d", &R, &C);
+
+    // reservar memoria dinámica
+    int **matrix = (int **)malloc(R * sizeof(int *));
+    for (int i = 0; i < R; i++)
+        matrix[i] = (int *)malloc(C * sizeof(int));
+
+    printf("Enter matrix elements:\n");
+    for (int i = 0; i < R; i++)
+        for (int j = 0; j < C; j++)
+            scanf("%d", &matrix[i][j]);
+
+    // imprimir matriz original
+    printf("\nInput Matrix:\n");
+    for (int i = 0; i < R; i++) {
+        for (int j = 0; j < C; j++) {
+            printf("%4d", matrix[i][j]);
+        }
+        printf("\n");
+    }
+
+    // imprimir en forma espiral
+    printf("\nSpiral Order:\n");
+    printSpiral(matrix, R, C);
+
+    // liberar memoria
+    for (int i = 0; i < R; i++)
+        free(matrix[i]);
+    free(matrix);
+
+    return 0;
+}

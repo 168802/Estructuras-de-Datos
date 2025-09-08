@@ -68,3 +68,13 @@ int main() {
 
     return 0;
 }
+
+
+
+
+// El algoritmo para imprimir una matriz en forma de espiral se basa en recorrerla por capas usando cuatro límites: top (fila superior), 
+// bottom (fila inferior), left (columna izquierda) y right (columna derecha). Primero se recorre la fila superior de izquierda a derecha, 
+// luego la columna derecha de arriba hacia abajo, después la fila inferior de derecha a izquierda y finalmente la columna izquierda de abajo hacia arriba. 
+// Tras completar cada vuelta se ajustan los límites hacia el centro (incrementando top y left, y reduciendo bottom y right), 
+// repitiendo el proceso hasta que todos los elementos han sido impresos. De esta forma se garantiza que cada número se visita exactamente una vez y 
+// en el orden espiral esperado, sin importar si la matriz es cuadrada o rectangular.

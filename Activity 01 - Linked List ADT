@@ -1,0 +1,161 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Definición del nodo
+struct Node {
+    int data;
+    struct Node* next;
+};
+
+// Puntero a la cabeza de la lista
+struct Node* head = NULL;
+
+// a. Crear nodo (función auxiliar)
+struct Node* createNode(int value) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->next = NULL;
+    return newNode;
+}
+
+// b. Mostrar nodos
+void displayNodes() {
+    struct Node* temp = head;
+    if (temp == NULL) {
+        printf("Lista vacia\n");
+        return;
+    }
+    printf("Lista: ");
+    while (temp != NULL) {
+        printf("%d -> ", temp->data);
+        temp = temp->next;
+    }
+    printf("NULL\n");
+}
+
+// c. Insertar al inicio
+void insertAtBeginning(int value) {
+    struct Node* newNode = createNode(value);
+    newNode->next = head;
+    head = newNode;
+}
+
+// d. Insertar en posición específica 
+void insertAtPosition(int value, int position) {
+    if (position < 1) {
+        printf("Posicion invalida\n");
+        return;
+    }
+    if (position == 1) {
+        insertAtBeginning(value);
+        return;
+    }
+
+    struct Node* newNode = createNode(value);
+    struct Node* temp = head;
+    for (int i = 1; i < position - 1 && temp != NULL; i++) {
+        temp = temp->next;
+    }
+
+    if (temp == NULL) {
+        printf("Posicion fuera de rango\n");
+        free(newNode);
+    } else {
+        newNode->next = temp->next;
+        temp->next = newNode;
+    }
+}
+
+// e. Insertar al final
+void insertAtEnd(int value) {
+    struct Node* newNode = createNode(value);
+    if (head == NULL) {
+        head = newNode;
+        return;
+    }
+    struct Node* temp = head;
+    while (temp->next != NULL) {
+        temp = temp->next;
+    }
+    temp->next = newNode;
+}
+
+// f. Eliminar al inicio
+void deleteAtBeginning() {
+    if (head == NULL) {
+        printf("Lista vacia\n");
+        return;
+    }
+    struct Node* temp = head;
+    head = head->next;
+    free(temp);
+}
+
+// g. Eliminar al final
+void deleteAtEnd() {
+    if (head == NULL) {
+        printf("Lista vacia\n");
+        return;
+    }
+    if (head->next == NULL) {
+        free(head);
+        head = NULL;
+        return;
+    }
+    struct Node* temp = head;
+    while (temp->next->next != NULL) {
+        temp = temp->next;
+    }
+    free(temp->next);
+    temp->next = NULL;
+}
+
+// h. Eliminar
+void deleteAtPosition(int position) {
+    if (head == NULL || position < 1) {
+        printf("Operacion invalida\n");
+        return;
+    }
+    if (position == 1) {
+        deleteAtBeginning();
+        return;
+    }
+
+    struct Node* temp = head;
+    for (int i = 1; i < position - 1 && temp->next != NULL; i++) {
+        temp = temp->next;
+    }
+
+    if (temp->next == NULL) {
+        printf("Posicion fuera de rango\n");
+    } else {
+        struct Node* toDelete = temp->next;
+        temp->next = toDelete->next;
+        free(toDelete);
+    }
+}
+
+
+int main() {
+    insertAtEnd(10);
+    insertAtEnd(20);
+    insertAtEnd(30);
+    displayNodes();   // Lista: 10 -> 20 -> 30 -> NULL
+
+    insertAtBeginning(5);
+    displayNodes();   // Lista: 5 -> 10 -> 20 -> 30 -> NULL
+
+    insertAtPosition(15, 3);
+    displayNodes();   // Lista: 5 -> 10 -> 15 -> 20 -> 30 -> NULL
+
+    deleteAtBeginning();
+    displayNodes();   // Lista: 10 -> 15 -> 20 -> 30 -> NULL
+
+    deleteAtEnd();
+    displayNodes();   // Lista: 10 -> 15 -> 20 -> NULL
+
+    deleteAtPosition(2);
+    displayNodes();   // Lista: 10 -> 20 -> NULL
+
+    return 0;
+}

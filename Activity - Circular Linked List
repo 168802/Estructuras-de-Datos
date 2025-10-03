@@ -1,0 +1,362 @@
+// circular_list_adt.c
+// ADT: Lista Enlazada Circular (enteros) + menú de pruebas por teclado
+// Compilar:  gcc -std=c99 -O2 -Wall -Wextra -o circular circular_list_adt.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+typedef struct Node {
+    int data;
+    struct Node* next;
+} Node;
+
+typedef struct {
+    Node* tail;   // Si la lista no está vacía: tail->next es la cabeza
+    size_t size;
+} CList;
+
+/* ========= Prototipos del ADT ========= */
+void    clist_init(CList* L);
+bool    clist_is_empty(const CList* L);
+size_t  clist_size(const CList* L);
+void    clist_clear(CList* L);
+
+bool    clist_add_front(CList* L, int value);
+bool    clist_add_end(CList* L, int value);
+bool    clist_add_at(CList* L, size_t pos, int value); // pos: 0..size
+
+bool    clist_remove_front(CList* L, int* out);        // out opcional (puede ser NULL)
+bool    clist_remove_end(CList* L, int* out);
+bool    clist_remove_at(CList* L, size_t pos, int* out);
+
+long    clist_search(const CList* L, int value);       // índice [0..size-1], o -1 si no
+bool    clist_get_head(const CList* L, int* out);
+bool    clist_get_tail(const CList* L, int* out);
+void    clist_traverse(const CList* L, void (*visit)(int));
+void    clist_display(const CList* L);
+
+/* ========= Implementación ========= */
+static Node* make_node(int value) {
+    Node* n = (Node*)malloc(sizeof(Node));
+    if (!n) return NULL;
+    n->data = value;
+    n->next = NULL;
+    return n;
+}
+
+void clist_init(CList* L) {
+    L->tail = NULL;
+    L->size = 0;
+}
+
+bool clist_is_empty(const CList* L) {
+    return L->size == 0; // o L->tail == NULL
+}
+
+size_t clist_size(const CList* L) {
+    return L->size;
+}
+
+void clist_clear(CList* L) {
+    if (!L || !L->tail) { L->size = 0; return; }
+    Node* head = L->tail->next;
+    L->tail->next = NULL; // Romper el ciclo para liberar linealmente
+    Node* cur = head;
+    while (cur) {
+        Node* nxt = cur->next;
+        free(cur);
+        cur = nxt;
+    }
+    L->tail = NULL;
+    L->size = 0;
+}
+
+bool clist_add_front(CList* L, int value) {
+    Node* n = make_node(value);
+    if (!n) return false;
+
+    if (L->tail == NULL) {
+        // Primera inserción: nodo se apunta a sí mismo
+        n->next = n;
+        L->tail = n;
+    } else {
+        n->next = L->tail->next; // head actual
+        L->tail->next = n;       // nuevo head
+    }
+    L->size++;
+    return true;
+}
+
+bool clist_add_end(CList* L, int value) {
+    Node* n = make_node(value);
+    if (!n) return false;
+
+    if (L->tail == NULL) {
+        n->next = n;
+        L->tail = n;
+    } else {
+        n->next = L->tail->next; // head actual
+        L->tail->next = n;
+        L->tail = n;             // nuevo tail
+    }
+    L->size++;
+    return true;
+}
+
+bool clist_add_at(CList* L, size_t pos, int value) {
+    if (pos > L->size) return false; // fuera de rango
+    if (pos == 0) return clist_add_front(L, value);
+    if (pos == L->size) return clist_add_end(L, value);
+
+    Node* n = make_node(value);
+    if (!n) return false;
+
+    // Insertar antes del índice 'pos'
+    Node* prev = L->tail->next; // head
+    for (size_t i = 0; i < pos - 1; ++i) prev = prev->next;
+    n->next = prev->next;
+    prev->next = n;
+    L->size++;
+    return true;
+}
+
+bool clist_remove_front(CList* L, int* out) {
+    if (L->tail == NULL) return false;
+
+    Node* head = L->tail->next;
+    if (out) *out = head->data;
+
+    if (L->tail == head) {
+        // Solo un nodo
+        free(head);
+        L->tail = NULL;
+    } else {
+        L->tail->next = head->next; // nuevo head
+        free(head);
+    }
+    L->size--;
+    return true;
+}
+
+bool clist_remove_end(CList* L, int* out) {
+    if (L->tail == NULL) return false;
+
+    Node* tail = L->tail;
+    Node* head = tail->next;
+
+    if (out) *out = tail->data;
+
+    if (tail == head) {
+        // Solo un nodo
+        free(tail);
+        L->tail = NULL;
+    } else {
+        // Buscar el previo al tail
+        Node* prev = head;
+        while (prev->next != tail) prev = prev->next;
+        prev->next = head;
+        free(tail);
+        L->tail = prev;
+    }
+    L->size--;
+    return true;
+}
+
+bool clist_remove_at(CList* L, size_t pos, int* out) {
+    if (pos >= L->size) return false;
+    if (pos == 0) return clist_remove_front(L, out);
+    if (pos == L->size - 1) return clist_remove_end(L, out);
+
+    Node* prev = L->tail->next; // head
+    for (size_t i = 0; i < pos - 1; ++i) prev = prev->next;
+
+    Node* victim = prev->next;
+    if (out) *out = victim->data;
+    prev->next = victim->next;
+    free(victim);
+    L->size--;
+    return true;
+}
+
+long clist_search(const CList* L, int value) {
+    if (!L || !L->tail) return -1;
+    Node* head = L->tail->next;
+    Node* cur = head;
+    size_t idx = 0;
+    do {
+        if (cur->data == value) return (long)idx;
+        cur = cur->next;
+        idx++;
+    } while (cur != head);
+    return -1;
+}
+
+bool clist_get_head(const CList* L, int* out) {
+    if (!L || !L->tail) return false;
+    if (out) *out = L->tail->next->data;
+    return true;
+}
+
+bool clist_get_tail(const CList* L, int* out) {
+    if (!L || !L->tail) return false;
+    if (out) *out = L->tail->data;
+    return true;
+}
+
+void clist_traverse(const CList* L, void (*visit)(int)) {
+    if (!L || !L->tail || !visit) return;
+    Node* head = L->tail->next;
+    Node* cur = head;
+    do {
+        visit(cur->data);
+        cur = cur->next;
+    } while (cur != head);
+}
+
+static void print_item(int x) {
+    printf("%d ", x);
+}
+
+void clist_display(const CList* L) {
+    if (!L || !L->tail) {
+        printf("[Lista vacía]\n");
+        return;
+    }
+    Node* head = L->tail->next;
+    Node* cur = head;
+    printf("HEAD -> ");
+    do {
+        if (cur == head) printf("[%d]", cur->data);
+        else printf(" -> [%d]", cur->data);
+        cur = cur->next;
+    } while (cur != head);
+    printf(" -> (vuelve a HEAD)\n");
+    printf("Tamaño: %zu\n", L->size);
+}
+
+/* ========= Menú de prueba (lectura por teclado) ========= */
+static void pausa() {
+    printf("\nPresiona ENTER para continuar...");
+    int c; while ((c = getchar()) != '\n' && c != EOF) {}
+}
+
+int main(void) {
+    CList L;
+    clist_init(&L);
+
+    int opcion;
+    do {
+        printf("\n====== MENU: Circular Linked List ADT ======\n");
+        printf("1) Add to front\n");
+        printf("2) Add to end\n");
+        printf("3) Add at position (0..size)\n");
+        printf("4) Remove from front\n");
+        printf("5) Remove from end\n");
+        printf("6) Remove from position (0..size-1)\n");
+        printf("7) Search value (get index)\n");
+        printf("8) Traverse (imprimir en línea)\n");
+        printf("9) Size\n");
+        printf("10) Is Empty\n");
+        printf("11) Clear\n");
+        printf("12) Display (formato)\n");
+        printf("13) GetHead\n");
+        printf("14) GetTail\n");
+        printf("0) Salir\n");
+        printf("Selecciona una opción: ");
+        if (scanf("%d", &opcion) != 1) {
+            fprintf(stderr, "Entrada no válida.\n");
+            return 1;
+        }
+        // limpiar \n pendiente
+        int ch; while ((ch = getchar()) != '\n' && ch != EOF) {}
+
+        int val, ok;
+        size_t pos;
+        long idx;
+
+        switch (opcion) {
+            case 1:
+                printf("Valor a insertar al frente: ");
+                scanf("%d", &val); while ((ch = getchar()) != '\n' && ch != EOF) {}
+                ok = clist_add_front(&L, val);
+                printf(ok ? "OK: insertado al frente.\n" : "ERROR: sin memoria.\n");
+                break;
+            case 2:
+                printf("Valor a insertar al final: ");
+                scanf("%d", &val); while ((ch = getchar()) != '\n' && ch != EOF) {}
+                ok = clist_add_end(&L, val);
+                printf(ok ? "OK: insertado al final.\n" : "ERROR: sin memoria.\n");
+                break;
+            case 3:
+                printf("Posición (0..%zu): ", clist_size(&L));
+                scanf("%zu", &pos);
+                printf("Valor: ");
+                scanf("%d", &val);
+                while ((ch = getchar()) != '\n' && ch != EOF) {}
+                ok = clist_add_at(&L, pos, val);
+                printf(ok ? "OK: insertado en posicion.\n" : "ERROR: posicion invalida o sin memoria.\n");
+                break;
+            case 4: {
+                int out;
+                ok = clist_remove_front(&L, &out);
+                if (ok) printf("OK: eliminado del frente: %d\n", out);
+                else printf("ERROR: lista vacía.\n");
+            } break;
+            case 5: {
+                int out;
+                ok = clist_remove_end(&L, &out);
+                if (ok) printf("OK: eliminado del final: %d\n", out);
+                else printf("ERROR: lista vacía.\n");
+            } break;
+            case 6: {
+                printf("Posición a eliminar (0..%zu): ", clist_size(&L) ? clist_size(&L)-1 : 0);
+                scanf("%zu", &pos); while ((ch = getchar()) != '\n' && ch != EOF) {}
+                int out;
+                ok = clist_remove_at(&L, pos, &out);
+                if (ok) printf("OK: eliminado en pos %zu: %d\n", pos, out);
+                else printf("ERROR: posición inválida o lista vacía.\n");
+            } break;
+            case 7:
+                printf("Valor a buscar: ");
+                scanf("%d", &val); while ((ch = getchar()) != '\n' && ch != EOF) {}
+                idx = clist_search(&L, val);
+                if (idx >= 0) printf("Encontrado en índice %ld.\n", idx);
+                else printf("No encontrado.\n");
+                break;
+            case 8:
+                if (clist_is_empty(&L)) printf("[Lista vacía]\n");
+                else { clist_traverse(&L, print_item); printf("\n"); }
+                break;
+            case 9:
+                printf("Size: %zu\n", clist_size(&L));
+                break;
+            case 10:
+                printf("Is Empty: %s\n", clist_is_empty(&L) ? "true" : "false");
+                break;
+            case 11:
+                clist_clear(&L);
+                printf("Lista limpiada.\n");
+                break;
+            case 12:
+                clist_display(&L);
+                break;
+            case 13:
+                if (clist_get_head(&L, &val)) printf("Head: %d\n", val);
+                else printf("ERROR: lista vacía.\n");
+                break;
+            case 14:
+                if (clist_get_tail(&L, &val)) printf("Tail: %d\n", val);
+                else printf("ERROR: lista vacía.\n");
+                break;
+            case 0:
+                break;
+            default:
+                printf("Opción inválida.\n");
+        }
+        if (opcion != 0) pausa();
+    } while (opcion != 0);
+
+    clist_clear(&L);
+    return 0;
+}

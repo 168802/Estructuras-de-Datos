@@ -1,0 +1,79 @@
+#include <stdio.h>
+
+int main() {
+    // Vértices en orden: A=0, B=1, C=2, D=3
+    int n = 4;
+
+    // Matriz de adyacencia del grafo NO dirigido
+    // 1 significa que hay arista entre esos dos vértices
+    // 0 significa que no hay arista
+    int adj[4][4] = {
+        {0, 1, 1, 0},  // A conectado con B y C
+        {1, 0, 0, 1},  // B conectado con A y D
+        {1, 0, 0, 0},  // C conectado con A
+        {0, 1, 0, 0}   // D conectado con B
+    };
+
+    char labels[4] = {'A','B','C','D'};
+
+    // Imprimir encabezado (fila superior)
+    printf("   ");
+    for (int i = 0; i < n; i++) {
+        printf(" %c", labels[i]);
+    }
+    printf("\n");
+
+    // Imprimir cada fila con su etiqueta
+    for (int i = 0; i < n; i++) {
+        printf(" %c ", labels[i]);
+        for (int j = 0; j < n; j++) {
+            printf(" %d", adj[i][j]);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+int main() {
+    // Mapeo: A=0, B=1, C=2, D=3
+    int n = 4;
+
+    // Vamos a guardar para cada vértice su lista de vecinos salientes.
+    // adjList[v][k] = índice del k-ésimo vecino al que v apunta.
+    // deg[v] = cuántos vecinos tiene v.
+    int adjList[4][4];
+    int deg[4] = {0, 0, 0, 0};
+
+    // A (0) -> B (1)
+    adjList[0][ deg[0]++ ] = 1;
+    // A (0) -> C (2)
+    adjList[0][ deg[0]++ ] = 2;
+
+    // B (1) -> D (3)
+    adjList[1][ deg[1]++ ] = 3;
+
+    // C (2) -> (ninguno)
+    // D (3) -> (ninguno)
+
+    char labels[4] = {'A','B','C','D'};
+
+    // Imprimir lista de adyacencia dirigida
+    for (int v = 0; v < n; v++) {
+        printf("%c -> {", labels[v]);
+        for (int k = 0; k < deg[v]; k++) {
+            printf("%c", labels[ adjList[v][k] ]);
+            if (k < deg[v] - 1) {
+                printf(", ");
+            }
+        }
+        printf("}\n");
+    }
+
+    return 0;
+}

@@ -1,0 +1,147 @@
+#include <stdio.h>
+
+#define MAX_ELEMENTS 100
+#define EMPTY '\0'   // marca de posición vacía
+
+// ---------------------------------------------------------------------
+// Estructura del árbol binario representado con arreglo (complete tree)
+// ---------------------------------------------------------------------
+typedef struct {
+    char nodes[MAX_ELEMENTS]; // nodes[i] guarda el valor del nodo en índice i
+    int numElements;          // cuántos nodos válidos tengo
+} ArrayBinaryTree;
+
+
+// Función auxiliar para imprimir el árbol por niveles (índice y valor)
+void printTree(ArrayBinaryTree t) {
+    printf("Index : Value\n");
+    for (int i = 0; i < t.numElements; i++) {
+        if (t.nodes[i] != EMPTY) {
+            printf("%5d : %c\n", i, t.nodes[i]);
+        } else {
+            printf("%5d : -\n", i);
+        }
+    }
+}
+
+
+// ---------------------------------------------------------------------
+// (a) Construir el árbol EXACTO de la Figura 1
+//
+// La figura muestra este árbol (por niveles):
+//
+// índice:   0   1   2   3   4   5   6   7   8   9
+// valor :   G   D   I   B   F   H   J   A   C   E
+//
+// Relaciones usando índice i:
+//   - hijo_izq(i)  = 2*i + 1
+//   - hijo_der(i)  = 2*i + 2
+//
+// Ejemplo:
+//   G está en 0
+//      hijos: 1(D) y 2(I)
+//   D está en 1
+//      hijos: 3(B) y 4(F)
+//   I está en 2
+//      hijos: 5(H) y 6(J)
+//   B está en 3
+//      hijos: 7(A) y 8(C)
+//   F está en 4
+//      hijo izquierdo: 9(E)
+//      NO tiene hijo derecho -> árbol completo pero NO lleno
+// ---------------------------------------------------------------------
+ArrayBinaryTree buildCompleteTree() {
+    ArrayBinaryTree t;
+    for (int i = 0; i < MAX_ELEMENTS; i++) {
+        t.nodes[i] = EMPTY;
+    }
+
+    t.nodes[0] = 'G';
+    t.nodes[1] = 'D';
+    t.nodes[2] = 'I';
+    t.nodes[3] = 'B';
+    t.nodes[4] = 'F';
+    t.nodes[5] = 'H';
+    t.nodes[6] = 'J';
+    t.nodes[7] = 'A';
+    t.nodes[8] = 'C';
+    t.nodes[9] = 'E';
+
+    t.numElements = 10;
+
+    return t;
+}
+
+
+// ---------------------------------------------------------------------
+// (b) Convertirlo en "full binary tree"
+//
+// Definición: full binary tree = todo nodo tiene 0 o 2 hijos (no se permite exactamente 1)
+//
+// Problema en el árbol original:
+//   - El nodo 'F' (índice 4) tiene SOLO hijo izquierdo 'E' (índice 9) y ningún hijo derecho.
+//     Eso rompe la condición de "full".
+//
+// Para arreglarlo y volverlo lleno, hay dos opciones lógicas:
+//   (1) Agregar el hijo derecho que falta (nuevo nodo artificial).
+//   (2) O quitar el hijo que lo deja chueco.
+//
+// La instrucción dice: "Add the necessary nodes to make the tree a full binary tree."
+// o sea usar la opción (1): AGREGAR nodos faltantes, NO borrar.
+//
+// Entonces:
+//   - F está en índice 4
+//      hijo_izq(4)  = 9  -> 'E'
+//      hijo_der(4)  = 10 -> (NO EXISTE en el árbol original)
+//   Vamos a crear un nodo nuevo inventado, por ejemplo 'X', en índice 10,
+//   para que F tenga 2 hijos.
+//
+// Nota: los demás nodos ya cumplen 0 o 2 hijos.
+//
+// Después de la corrección, el arreglo quedaría:
+//
+// índice:    0   1   2   3   4   5   6   7   8   9   10
+// valor :    G   D   I   B   F   H   J   A   C   E    X
+//
+// y numElements = 11
+// ---------------------------------------------------------------------
+ArrayBinaryTree buildFullBinaryTree() {
+    ArrayBinaryTree t;
+    for (int i = 0; i < MAX_ELEMENTS; i++) {
+        t.nodes[i] = EMPTY;
+    }
+
+    // mismos nodos del árbol original
+    t.nodes[0] = 'G';
+    t.nodes[1] = 'D';
+    t.nodes[2] = 'I';
+    t.nodes[3] = 'B';
+    t.nodes[4] = 'F';
+    t.nodes[5] = 'H';
+    t.nodes[6] = 'J';
+    t.nodes[7] = 'A';
+    t.nodes[8] = 'C';
+    t.nodes[9] = 'E';
+
+    // nodo agregado para que 'F' tenga dos hijos
+    // índice 10 es hijo derecho de índice 4
+    t.nodes[10] = 'X';  // puedes llamarlo como quieras, por ejemplo 'X'
+
+    t.numElements = 11;
+
+    return t;
+}
+
+
+int main() {
+    ArrayBinaryTree completeT = buildCompleteTree();
+    ArrayBinaryTree fullT     = buildFullBinaryTree();
+
+    printf("=== (a) Arbol binario completo (Figura 1) ===\n");
+    printTree(completeT);
+
+    printf("\n=== (b) Arbol binario lleno (full binary tree) ===\n");
+    printTree(fullT);
+
+    return 0;
+}

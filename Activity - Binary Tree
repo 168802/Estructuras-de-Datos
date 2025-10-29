@@ -1,0 +1,175 @@
+#include <stdio.h>
+
+#define MAX_SIZE 100
+
+// Heap global (1-indexed)
+int heap[MAX_SIZE + 1];
+int heapSize = 0;
+
+// --- utils ---
+void swap(int *a, int *b) {
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+
+// Muestra el heap como arreglo
+void showHeap(void) {
+    int i;
+    if (heapSize == 0) {
+        printf("Heap: [empty]\n");
+        return;
+    }
+
+    printf("Heap: ");
+    for (i = 1; i <= heapSize; i++) {
+        printf("%d ", heap[i]);
+    }
+    printf("\n");
+}
+
+// Para cada nodo, imprime sus hijos usando índices de arreglo
+// Esto ayuda a ver el heap como árbol binario completo
+void printRelations(void) {
+    int i;
+    if (heapSize == 0) {
+        printf("No nodes.\n");
+        return;
+    }
+
+    printf("\n[index] node -> left_child / right_child\n");
+    for (i = 1; i <= heapSize; i++) {
+        int leftIdx = 2 * i;
+        int rightIdx = 2 * i + 1;
+
+        printf("[%d] %d -> ", i, heap[i]);
+
+        if (leftIdx <= heapSize)
+            printf("%d", heap[leftIdx]);
+        else
+            printf("NULL");
+
+        printf(" / ");
+
+        if (rightIdx <= heapSize)
+            printf("%d", heap[rightIdx]);
+        else
+            printf("NULL");
+
+        printf("\n");
+    }
+    printf("\n");
+}
+
+// Sube el elemento en posición i hasta restaurar la propiedad de Max-Heap
+void reHeapUp(int i) {
+    while (i > 1) {
+        int parent = i / 2;
+        if (heap[i] > heap[parent]) {
+            swap(&heap[i], &heap[parent]);
+            i = parent;
+        } else {
+            break;
+        }
+    }
+}
+
+// Inserta un nuevo elemento en el Max-Heap
+void insert(int item) {
+    if (heapSize >= MAX_SIZE) {
+        printf("Error: heap lleno, no se puede insertar %d\n", item);
+        return;
+    }
+
+    heapSize++;
+    heap[heapSize] = item;   // Ponemos el nuevo elemento al final
+    reHeapUp(heapSize);      // Lo subimos hasta su posición correcta
+}
+
+// Baja el elemento en posición i hasta restaurar la propiedad de Max-Heap
+void reHeapDown(int i) {
+    while (1) {
+        int left = 2 * i;
+        int right = 2 * i + 1;
+        int largest = i;
+
+        // Compara con hijo izquierdo
+        if (left <= heapSize && heap[left] > heap[largest]) {
+            largest = left;
+        }
+        // Compara con hijo derecho
+        if (right <= heapSize && heap[right] > heap[largest]) {
+            largest = right;
+        }
+
+        // Si el padre ya es más grande que ambos hijos, ya quedó
+        if (largest == i)
+            break;
+
+        // Si no, intercambiamos y seguimos bajando
+        swap(&heap[i], &heap[largest]);
+        i = largest;
+    }
+}
+
+// Elimina y regresa el máximo (la raíz del heap)
+// Reacomoda usando reHeapDown
+int removeMax(void) {
+    if (heapSize == 0) {
+        printf("Error: heap vacio, no se puede remover.\n");
+        return -1; // valor indicador
+    }
+
+    int maxVal = heap[1];          // raíz
+    heap[1] = heap[heapSize];      // mover el último a la raíz
+    heapSize--;                    // reducir tamaño
+    reHeapDown(1);                 // reajustar hacia abajo
+
+    return maxVal;
+}
+
+// Programa de demostración:
+// 1. Lee N
+// 2. Inserta N valores (mostrando el heap tras cada inserción)
+// 3. Imprime las relaciones padre-hijos
+// 4. Lee K
+// 5. Remueve el máximo K veces (mostrando el heap tras cada remoción)
+int main(void) {
+    int N, K;
+    int x;
+    int i;
+
+    printf("Cuantos numeros vas a insertar? ");
+    scanf("%d", &N);
+
+    for (i = 0; i < N; i++) {
+        printf("Dame el numero #%d: ", i + 1);
+        scanf("%d", &x);
+
+        insert(x);
+        printf("Despues de insertar %d:\n", x);
+        showHeap();
+    }
+
+    // Mostrar la estructura padre-hijos
+    printRelations();
+
+    printf("Cuantas veces quieres quitar el maximo? ");
+    scanf("%d", &K);
+
+    for (i = 0; i < K; i++) {
+        int removed = removeMax();
+        if (removed == -1) {
+            // heap ya vacio
+            break;
+        }
+        printf("Se removio el maximo: %d\n", removed);
+        printf("Heap despues de remover:\n");
+        showHeap();
+    }
+
+    // Mostrar relaciones finales
+    printRelations();
+
+    return 0;
+}
